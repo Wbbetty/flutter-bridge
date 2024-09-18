@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>IM</title>
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!--		<script src="https://cdn.goeasy.io/goeasy-2.12.3.min.js"></script>-->
+</head>
+<body>
+<div id="app">
+    <div class="header">IM-Local</div>
+<!--    <div class="operations">-->
+<!--        <div>-->
+<!--            <span>连接：</span>-->
+<!--            <div>-->
+<!--                <button onclick="connect()">建立连接</button>-->
+<!--                <button onclick="disconnect()">断开连接</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <span>消息：</span>-->
+<!--            <div>-->
+<!--                <button onclick="createTextMessage()">文字消息</button>-->
+<!--                <button onclick="createImageMessage()">图片消息</button>-->
+<!--                <button onclick="createFileMessage()">文字消息</button>-->
+<!--                <button onclick="createAudioMessage()">语音消息</button>-->
+<!--                <button onclick="createVideoMessage()">视频消息</button>-->
+<!--                <button onclick="createCustomMessage()">自定义消息</button>-->
+<!--                <button onclick="recallMessage()">撤回</button>-->
+<!--                <button onclick="deleteMessage()">删除</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <span>会话：</span>-->
+<!--            <div>-->
+<!--                <button onclick="latestConversations()">会话</button>-->
+<!--                <button onclick="groupMarkAsRead()">群聊已读</button>-->
+<!--                <button onclick="privateMarkAsRead()">私聊已读</button>-->
+<!--                <button onclick="removePrivateConversation()">移出私聊</button>-->
+<!--                <button onclick="removeGroupConversation()">移出群聊</button>-->
+<!--                <button onclick="removeConversation()">删除会话</button>-->
+<!--                <button onclick="topPrivateConversation()">置顶私聊</button>-->
+<!--                <button onclick="topGroupConversation()">置顶群聊</button>-->
+<!--                <button onclick="topConversation()">置顶会话</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--            <span>历史消息：</span>-->
+<!--            <div>-->
+<!--                <button onclick="history()">获取历史消息</button>-->
+<!--                <button onclick="privateHistory()">获取私聊历史消息</button>-->
+<!--                <button onclick="groupHistory()">获取群聊历史消息</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+</div>
+<script>
+  console.log("localstorage",typeof localstorage)
+  console.log("GoEasy",typeof GoEasy)
+  const goEasy = GoEasy.getInstance({
+    host: "hangzhou.goeasy.io",
+    appkey: "BC-xxx",
+    modules: ["im"]
+  });
+  window.GoEasy = GoEasy;
+  window.goEasy = goEasy;
+
+  const im = goEasy.im;
+  const user = {
+    id: "08c0a6ec-a42b-47b2-bb1e-15e0f5f9a19a",
+    data: {
+      name: "Mattie",
+      avatar: "/static/images/Avatar-1.png"
+    }
+  }
+  const friend = {
+    id: "fdee46b0-4b01-4590-bdba-6586d7617f95",
+    data: {
+      name: "Tracy",
+      avatar: "/static/images/Avatar-3.png"
+    }
+  }
+  const group = {
+    id: "group-a42b-47b2-bb1e-15e0f5f9a19a",
+    data: {
+      name: "小程序交流群",
+      avatar : '/static/images/wx.png',
+    }
+  }
+
+  const toFriend = {
+    type : GoEasy.IM_SCENE.PRIVATE,
+    id : friend.id,
+    data: friend.data
+  }
+
+  const toGroup = {
+    type : GoEasy.IM_SCENE.GROUP,
+    id : group.id,
+    data: group.data
+  }
+
+  function connect() {
+    goEasy.connect({
+      id: user.id,
+      data: user.data,
+      onSuccess: () => {
+        console.log("GoEasy connect successfully.",user);
+      },
+      onFailed: function(error) {
+        console.log("Failed to connect GoEasy, code:", error);
+      },
+      onProgress: function(attempts) {
+        console.log("GoEasy is connecting" + attempts);
+      }
+    });
+  }
+
+  function onPrivateMessage() {
+    im.on(GoEasy.IM_EVENT.PRIVATE_MESSAGE_RECEIVED, (message) => {
+      console.log('接收私聊消息',message);
+    });
+  }
+
+  function onGroupMessage() {
+    im.on(GoEasy.IM_EVENT.GROUP_MESSAGE_RECEIVED, (message) => {
+      console.log('接收群聊消息',message);
+    });
+  }
+
+  function createTextMessage () {
+    let textMessage = im.createTextMessage({
+      text:'Hello, GoEasyIM', //消息内容
+      to : toFriend
+    });
+    sendMessage(textMessage);
+  }
+
+  function createImageMessage () {
+    let message = im.createImageMessage({
+      file: imagefile, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res.tempFiles数组中的元素，比如res.tempFiles[0]即为选择的第一张图片
+      to : toFriend,
+      onProgress: function(event) { console.log('file uploading:', event) } //获取上传进度
+    });
+    sendMessage(message);
+  }
+
+  function createAudioMessage () {
+    let message = im.createAudioMessage({
+      file: audioFile, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res.tempFiles数组中的元素，比如res.tempFiles[0]即为选择的第一张图片
+      to : toFriend,
+      onProgress: function(event) { console.log('file uploading:', event) } //获取上传进度
+    });
+    sendMessage(message);
+  }
+
+  function createVideoMessage () {
+    let message = im.createVideoMessage({
+      file: videoFile, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res.tempFiles数组中的元素，比如res.tempFiles[0]即为选择的第一张图片
+      to : toFriend,
+      onProgress: function(event) { console.log('file uploading:', event) } //获取上传进度
+    });
+    sendMessage(message);
+  }
+
+  function createFileMessage() {
+    let message = im.createFileMessage({
+      file: document.getElementById('testFile').files[0],
+      to : toFriend,
+      onProgress: function(event) { console.log('file uploading:', event) }//获取上传进度
+    });
+    sendMessage(message);
+  }
+
+  function createCustomMessage() {
+    var customMessage = im.createCustomMessage({
+      type:'order',
+      payload: {
+        id: '252364104325',
+        url: 'https://goeasy-im-1306099072.cos.accelerate.myqcloud.com/goeasy-im-test02/2827248356837635_uni-image.jpg',
+        name: '青桔柠檬气泡美式',
+        price: '￥23',
+        count: 1,
+      },
+      to : toFriend,
+    });
+    sendMessage(customMessage);
+  }
+
+  function sendMessage (message) {
+    im.sendMessage({
+      message: message,
+      onSuccess: function (message) { //发送成功
+        console.log("message sent successfully.", message);
+      },
+      onFailed: function (error) { //发送失败
+        console.log('Failed to send private message，code:' + error.code +' ,error ' + error.content);
+      }
+    });
+  }
+
+  function latestConversations() {
+    im.latestConversations({
+      onSuccess: function (result) {
+        console.log('latestConversations',result);
+      },
+      onFailed: function (error) { //获取失败
+        console.log("Failed to get the latest conversations, code:" + error.code + " content:" + error.content);
+      },
+    });
+  }
+
+  function privateMarkAsRead() {
+    im.markMessageAsRead({
+      id: friend.id,
+      type: GoEasy.IM_SCENE.PRIVATE, //群聊：GoEasy.IM_SCENE.GROUP, 客服消息：GoEasy.IM_SCENE.CS,
+      onSuccess: function () {
+        console.log('标记私聊已读成功');
+      },
+      onFailed: function (error) {
+        console.log('标记私聊已读失败', error);
+      },
+    });
+
+  }
+
+  function groupMarkAsRead() {
+    im.markMessageAsRead({
+      id: group.id,
+      type: GoEasy.IM_SCENE.GROUP, //群聊：GoEasy.IM_SCENE.GROUP, 客服消息：GoEasy.IM_SCENE.CS,
+      onSuccess: function () {
+        console.log('标记群聊已读成功');
+      },
+      onFailed: function (error) {
+        console.log('标记群聊已读失败', error);
+      },
+    });
+
+  }
+
+  function onConversationChange () {
+    im.on(GoEasy.IM_EVENT.CONVERSATIONS_UPDATED, (conversations) => {
+      console.log('onNewConversation',conversations);
+    });
+  }
+
+  function removePrivateConversation () {
+    im.removePrivateConversation({
+      userId: friend.id,
+      onSuccess: function () {
+        console.log("Remove private conversation successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to remove private conversation, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+
+  function removeGroupConversation() {
+    im.removeGroupConversation({
+      groupId: group.id,
+      onSuccess: function () {
+        console.log("Remove group conversation successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to remove group conversation, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+
+  function removeConversation() {
+    im.removeConversation({
+      conversation: conversation,
+      onSuccess: function () {
+        console.log('删除会话成功');
+      },
+      onFailed: function (error) {
+        console.log(error);
+      },
+    });
+  }
+
+  function topPrivateConversation() {
+    im.topPrivateConversation({
+      userId: friend.id,
+      top:true,
+      onSuccess: function () {
+        console.log("Set private conversation on top successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to set private conversation on top, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+
+  function topGroupConversation() {
+    im.topGroupConversation({
+      groupId: group.id,
+      top:true,//置顶为true, 取消置顶为false
+      onSuccess: function () {
+        console.log("Set group conversation on top successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to set group conversation on top, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+
+  function topConversation() {
+    im.topConversation({
+      conversation: conversation,
+      top: true, //或者 false
+      onSuccess: function () {
+        console.log(description, '成功');
+      },
+      onFailed: function (error) {
+        console.log(description, '失败：', error);
+      },
+    });
+  }
+
+  function markPrivateMessageAsRead() {
+    im.markPrivateMessageAsRead({
+      userId: friend.id,  //聊天对象的userId
+      onSuccess: function () { //标记成功
+        console.log("Marked as read successfully.");
+      },
+      onFailed: function (error) { //标记失败
+        console.log("Failed to mark as read, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function markGroupMessageAsRead() {
+    im.markGroupMessageAsRead({
+      groupId: group.id,
+      onSuccess: function () {//标记成功
+        console.log("Marked as read successfully.");
+      },
+      onFailed: function (error) { //标记失败
+        console.log("Failed to mark as read, code:" + error.code + " content:" + error.content);
+      }
+    })
+  }
+  function history() {
+    im.history({
+      id: friend.id,//用户id或者群id
+      type: GoEasy.IM_SCENE.PRIVATE, //群聊：GoEasy.IM_SCENE.GROUP, 客服：GoEasy.IM_SCENE.CS,
+      lastTimestamp: null, //上次查询结果里最后一条消息的时间戳，首次查询传入null即可
+      limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
+      onSuccess: function (result) {
+        console.log("Query history successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) { //获取失败
+        console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+      },
+    });
+  }
+  function privateHistory() {
+    im.history({
+      userId: friend.id,  //对方userId
+      lastTimestamp: null, //上次查询结果里最后一条消息的时间戳，首次查询传入null即可
+      limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
+      onSuccess: function (result) {
+        console.log("Query history successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) { //获取失败
+        console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+      },
+    });
+  }
+  function groupHistory() {
+    im.history({
+      groupId: group.id, //groupId
+      lastTimestamp: null, //上次查询结果里最后一条消息的时间戳，首次查询传入null即可
+      limit: 10, //可选项，返回的消息条数，默认为10条，最多30条
+      onSuccess: function (result) {
+        console.log("Query history successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) { //获取失败
+        console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+      },
+    });
+  }
+  function recallMessage() {
+    im.recallMessage({
+      messages:[message],  //必须为数组格式，要撤回的消息
+      onSuccess: function () { //撤回成功
+        console.log("Message recall successful.");
+      },
+      onFailed: function (error) { //失败失败
+        console.log("Message recall failed, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function onMessageRecalled() {
+    //监听和接收单聊消息
+    im.on(GoEasy.IM_EVENT.MESSAGE_RECALLED, (messages) => {
+      console.log('onMessageRecalled',messages);
+    });
+  }
+  function deleteMessage() {
+    im.deleteMessage({
+      messages:[message],  //必须为数组格式，要删除的消息
+      onSuccess: function () { //消息删除成功
+        console.log("Messages delete successfully.");
+      },
+      onFailed: function (error) { //消息删除失败
+        console.log("Failed to delete message, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function onMessageDeleted() {
+    //监听和接收消息删除事件
+    im.on(GoEasy.IM_EVENT.MESSAGE_DELETED, (messages) => {
+      console.log("Deleted messages:" + JSON.stringify(messages));
+    });
+  }
+  function hereNow () {
+    im.hereNow({
+      userIds:['user001','user002'], //每次查询最多不超过50个
+      onSuccess: function (result) {
+        console.log("Query online user list successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) { //连接失败
+        console.log("Failed to mark as read, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function subscribeUserPresence () {
+    im.subscribeUserPresence({
+      userIds:['user001','user002'],
+      onSuccess: function () {
+        console.log("Subscribe user presence successfully.");
+      },
+      onFailed: function (error) { //连接失败
+        console.log("Failed to subscribe user presence, code:" + error.code + " content:" + error.content);
+      }
+    });
+    var onUserPresence = function (event) {
+      console.log("online/offline event:" + JSON.stringify(event));
+    };
+    //接受用户上下线状态变化
+    im.on(GoEasy.IM_EVENT.USER_PRESENCE, onUserPresence);
+  }
+  function subscribeGroup() {
+    im.subscribeGroup({
+      groupIds:["group001"],
+      onSuccess: function () {  //订阅成功
+        console.log("Group message subscribe successfully.");
+      },
+      onFailed: function (error) { //订阅失败
+        console.log("Failed to subscribe group message, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function unsubscribeGroup() {
+    im.unsubscribeGroup({
+      groupId:"group001",
+      onSuccess: function () {  //订阅成功
+        console.log("Group message subscribe successfully.");
+      },
+      onFailed: function (error) { //订阅失败
+        console.log("Failed to subscribe group message, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function subscribeGroupPresence () {
+    var onGroupPresence = function (event) {
+      //{"groupId":"group001","groupOnlineCount":"23","time":1591689232383,"action":"join","id":"user001","data": {"avatar":"/images/Avatar-2.png","name":"Wallace"}}
+      console.log("Group User online/offline event:" + JSON.stringify(event));
+    };
+
+    //接收群成员上下线事件
+    im.on(GoEasy.IM_EVENT.GROUP_PRESENCE, onGroupPresence);
+
+    var groupIds = ["group001"];
+
+    //订阅群成员上下线，一次可以订阅多个群
+    im.subscribeGroupPresence({
+      groupIds:groupIds,
+      onSuccess: function () {
+        console.log("Subscribe group presence successfully.");
+      },
+      onFailed: function (error) { //连接失败
+        console.log("Failed to subscribe group presence, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function unsubscribeUserPresence () {
+    //取消监听上下线提醒
+    im.unsubscribeUserPresence({
+      userId:"user001",
+      onSuccess: function () {
+        console.log("Unsubscribe user presence successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to unsubscribe user presence, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function unsubscribeGroupPresence () {
+    im.unsubscribeGroupPresence({
+      groupId:"group001",
+      onSuccess: function () {
+        console.log("Unsubscribe group presence successfully.");
+      },
+      onFailed: function (error) {
+        console.log("Failed to unsubscribe group presence, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function grouphereNow() {
+    im.groupHereNow({
+      groupId:'group001',
+      onSuccess: function (result) {
+        console.log("Query online group user list successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) {
+        console.log("Failed to query group online users, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+  function groupOnlineCount () {
+    im.groupOnlineCount({
+      groupId:"group001",
+      onSuccess: function (result) {
+        console.log("Query online group user count successfully, result:\n " + JSON.stringify(result));
+      },
+      onFailed: function (error) { //连接失败
+        console.log("Failed to query online group user count, code:" + error.code + " content:" + error.content);
+      }
+    });
+  }
+</script>
+</body>
+</html>
